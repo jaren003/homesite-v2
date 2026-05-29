@@ -65,7 +65,7 @@ export default function RemindersPageClient({ initialReminders, reminderLists }:
             >
               <span className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ background: list.color }} />
-              <span className="flex-1 truncate">{list.title}</span>
+              <span className="flex-1 truncate">{list.name}</span>
               {count > 0 && (
                 <span className="text-xs" style={{ color: 'var(--hb-muted)' }}>{count}</span>
               )}

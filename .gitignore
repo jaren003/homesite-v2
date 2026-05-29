@@ -42,3 +42,6 @@ next-env.d.ts
 
 # EventKit bridge binary (compiled locally, not committed)
 scripts/eventkit-bridge/eventkit-bridge
+
+# Routing engine decision log
+/logs/

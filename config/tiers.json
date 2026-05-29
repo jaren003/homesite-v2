@@ -1,0 +1,5 @@
+{
+  "T1": { "role": "Simple Q&A", "model": "phi3:mini" },
+  "T2": { "role": "Complex / fallback", "model": "llama3:8b" },
+  "T3": { "role": "Deep reasoning / tool use", "model": "claude-sonnet-4-6" }
+}

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import type { CalendarEvent, Calendar } from '@/lib/eventkit/types'
 import EventCard from './EventCard'
 
@@ -46,10 +47,21 @@ export default function CalendarGrid({ events, calendars, initialMonth }: Props)
   const [month, setMonth] = useState(() => initialMonth ? parseInt(initialMonth.slice(5,7)) - 1 : today.getMonth())
   const [selectedDay, setSelectedDay] = useState<string>(() => isoDate(today))
   const [hiddenCalIds, setHiddenCalIds] = useState<Set<string>>(new Set())
+  const [fetchedEvents, setFetchedEvents] = useState<CalendarEvent[]>(events)
+
+  // Re-fetch events from the API whenever the displayed month changes.
+  // The server only pre-fetches the initial month; navigation requires a client fetch.
+  useEffect(() => {
+    const { start, end } = monthRange(year, month)
+    fetch(`/api/calendar?start=${start}&end=${end}`)
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data.events)) setFetchedEvents(data.events) })
+      .catch(() => {/* keep existing events on error */})
+  }, [year, month])
 
   const visibleEvents = useMemo(
-    () => events.filter(e => !hiddenCalIds.has(e.calendarId)),
-    [events, hiddenCalIds]
+    () => fetchedEvents.filter(e => !hiddenCalIds.has(e.calendarId)),
+    [fetchedEvents, hiddenCalIds]
   )
 
   const eventsByDay = useMemo(() => {
@@ -105,7 +117,7 @@ export default function CalendarGrid({ events, calendars, initialMonth }: Props)
               >
                 <span className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
                       style={{ background: cal.color }} />
-                <span style={{ color: 'var(--hb-text)' }}>{cal.title}</span>
+                <span style={{ color: 'var(--hb-text)' }}>{cal.name}</span>
               </button>
             )
           })}
@@ -191,17 +203,30 @@ export default function CalendarGrid({ events, calendars, initialMonth }: Props)
 
           {/* Selected day events */}
           <div className="flex flex-col gap-2">
-            <p className="text-xs font-mono font-semibold uppercase tracking-wider"
-               style={{ color: 'var(--hb-textSub)' }}>
-              {new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-mono font-semibold uppercase tracking-wider"
+                 style={{ color: 'var(--hb-textSub)' }}>
+                {new Date(selectedDay + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </p>
+              <Link href={`/day/${selectedDay}`}
+                    className="text-xs hover:opacity-70 transition-opacity"
+                    style={{ color: 'var(--hb-accent)' }}>
+                View day →
+              </Link>
+            </div>
             {selectedEvents.length === 0
               ? <p className="text-sm py-4 text-center rounded-xl border border-dashed"
                    style={{ color: 'var(--hb-muted)', borderColor: 'var(--hb-border)' }}>
                   No events
                 </p>
               : <div className="flex flex-col gap-2">
-                  {selectedEvents.map(e => <EventCard key={e.id} event={e} />)}
+                  {selectedEvents.map(e => (
+                    <EventCard
+                      key={e.id}
+                      event={e}
+                      href={`/event/${encodeURIComponent(e.id)}?date=${selectedDay}`}
+                    />
+                  ))}
                 </div>
             }
           </div>

@@ -63,7 +63,9 @@ export default async function DashboardPage() {
           </div>
           {todayEvents.length === 0
             ? <EmptyState label="Nothing scheduled today" />
-            : <div className="flex flex-col gap-2">{todayEvents.map(e => <EventCard key={e.id} event={e} />)}</div>
+            : <div className="flex flex-col gap-2">{todayEvents.map(e => (
+                <EventCard key={e.id} event={e} href={`/event/${encodeURIComponent(e.id)}?date=${start}`} />
+              ))}</div>
           }
         </section>
 

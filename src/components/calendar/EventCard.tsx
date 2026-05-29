@@ -1,15 +1,22 @@
 'use client'
 
+import Link from 'next/link'
 import { formatRelativeDate, formatEventTime } from '@/lib/utils/date'
 import type { CalendarEvent } from '@/lib/eventkit/types'
 
 interface Props {
   event: CalendarEvent
   onClick?: (event: CalendarEvent) => void
+  /** When provided, renders as a Next.js Link instead of a button */
+  href?: string
   compact?: boolean   // true in month grid cells
 }
 
-export default function EventCard({ event, onClick, compact = false }: Props) {
+const CARD_CLASS = `w-full flex items-stretch rounded-xl bg-hb-card border border-hb-border
+                    overflow-hidden cursor-pointer hover:border-hb-muted transition-colors
+                    active:scale-[0.99] text-left`
+
+export default function EventCard({ event, onClick, href, compact = false }: Props) {
   const urgency = formatRelativeDate(event.startDate)
   const timeStr = formatEventTime({
     startDate: event.startDate,
@@ -23,13 +30,8 @@ export default function EventCard({ event, onClick, compact = false }: Props) {
     urgency === 'Tomorrow'  ? 'text-hb-accent'  :
     'text-hb-textSub'
 
-  return (
-    <button
-      onClick={() => onClick?.(event)}
-      className="w-full flex items-stretch rounded-xl bg-hb-card border border-hb-border
-                 overflow-hidden cursor-pointer hover:border-hb-muted transition-colors
-                 active:scale-[0.99] text-left"
-    >
+  const inner = (
+    <>
       {/* Colored left stripe from calendar color */}
       <div
         data-testid="calendar-color-stripe"
@@ -69,6 +71,16 @@ export default function EventCard({ event, onClick, compact = false }: Props) {
           <p className="text-[9px] text-hb-textSub mt-0.5 font-mono">{timeStr}</p>
         )}
       </div>
+    </>
+  )
+
+  if (href) {
+    return <Link href={href} className={CARD_CLASS}>{inner}</Link>
+  }
+
+  return (
+    <button onClick={() => onClick?.(event)} className={CARD_CLASS}>
+      {inner}
     </button>
   )
 }
