@@ -1,9 +1,39 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import type { Message } from '$lib/ollama.ts'
 
   let messages: (Message & { pending?: boolean })[] = []
   let prompt = ''
   let sending = false
+  let conversationId = ''
+
+  onMount(async () => {
+    const storage = typeof localStorage !== 'undefined' ? localStorage : null
+    conversationId = storage?.getItem('conversationId') ?? crypto.randomUUID()
+    storage?.setItem('conversationId', conversationId)
+
+    try {
+      const res = await fetch(`/api/history?id=${encodeURIComponent(conversationId)}`)
+      if (res.ok) {
+        const data = (await res.json()) as { messages: Message[] }
+        messages = data.messages ?? []
+      }
+    } catch {
+      // history load failure is non-fatal
+    }
+  })
+
+  async function saveHistory(msgs: Message[]) {
+    try {
+      await fetch('/api/history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversation: { id: conversationId, messages: msgs } }),
+      })
+    } catch {
+      // save failure is non-fatal
+    }
+  }
 
   async function send() {
     if (!prompt.trim() || sending) return
@@ -45,7 +75,19 @@
       messages[assistantIdx] = { ...messages[assistantIdx], pending: false }
       messages = [...messages]
       sending = false
+
+      const toSave = messages
+        .filter(m => !m.pending)
+        .map(({ role, content }) => ({ role, content }))
+      await saveHistory(toSave)
     }
+  }
+
+  async function clearHistory() {
+    conversationId = crypto.randomUUID()
+    const storage = typeof localStorage !== 'undefined' ? localStorage : null
+    storage?.setItem('conversationId', conversationId)
+    messages = []
   }
 
   function onKeydown(e: KeyboardEvent) {
@@ -57,6 +99,11 @@
 </script>
 
 <main>
+  <header>
+    <h1>Chat</h1>
+    <button class="clear" on:click={clearHistory} disabled={sending}>New conversation</button>
+  </header>
+
   <ol role="log" aria-label="conversation">
     {#each messages as msg}
       <li class="message {msg.role}" class:pending={msg.pending}>
@@ -88,6 +135,18 @@
     margin: 0 auto;
     padding: 1rem;
     gap: 1rem;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  h1 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
   }
 
   ol[role='log'] {
@@ -130,6 +189,7 @@
   p {
     margin: 0.25rem 0 0;
     white-space: pre-wrap;
+    word-break: break-word;
   }
 
   form {
@@ -145,10 +205,12 @@
     border-radius: 0.5rem;
     padding: 0.5rem 0.75rem;
     font: inherit;
+    font-size: 1rem;
+    min-height: 2.75rem;
   }
 
   button {
-    padding: 0.5rem 1.25rem;
+    padding: 0.75rem 1.25rem;
     border-radius: 0.5rem;
     background: #1a73e8;
     color: #fff;
@@ -156,10 +218,20 @@
     cursor: pointer;
     font: inherit;
     font-weight: 600;
+    font-size: 1rem;
+    touch-action: manipulation;
   }
 
   button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  button.clear {
+    background: transparent;
+    color: #1a73e8;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 </style>
