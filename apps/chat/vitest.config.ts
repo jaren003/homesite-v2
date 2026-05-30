@@ -18,6 +18,7 @@ export default defineConfig({
       '$lib/claude.ts': path.resolve(__dirname, './src/lib/claude.ts'),
       '$lib/dispatch.ts': path.resolve(__dirname, './src/lib/dispatch.ts'),
       '$lib/history.ts': path.resolve(__dirname, './src/lib/history.ts'),
+      '$lib/search.ts': path.resolve(__dirname, './src/lib/search.ts'),
     },
   },
 })

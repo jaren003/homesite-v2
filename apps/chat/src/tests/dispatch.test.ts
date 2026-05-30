@@ -53,7 +53,7 @@ describe('dispatch', () => {
 
     await dispatch('search for latest news', [])
 
-    expect(mockClaude).toHaveBeenCalledWith(expect.any(Array))
+    expect(mockClaude).toHaveBeenCalledWith(expect.any(Array), true)
     expect(mockOllama).not.toHaveBeenCalled()
   })
 })

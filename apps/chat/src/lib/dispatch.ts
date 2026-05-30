@@ -8,7 +8,7 @@ export async function dispatch(prompt: string, history: Message[]): Promise<Read
   const messages: Message[] = [...history, { role: 'user', content: prompt }]
 
   if (decision.tier === 'T3') {
-    return createClaudeStream(messages)
+    return createClaudeStream(messages, true)
   }
 
   return createOllamaStream(decision.model, messages)
