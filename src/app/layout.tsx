@@ -24,6 +24,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <a href="/guide" className="text-sm" style={{ color: 'var(--hb-textSub)' }}>
             Guide
           </a>
+          <a href={process.env.NEXT_PUBLIC_CHAT_URL ?? 'http://localhost:3001'}
+             className="text-sm"
+             style={{ color: 'var(--hb-textSub)' }}>
+            Chat
+          </a>
         </nav>
         <main className="max-w-5xl mx-auto px-4 py-6">
           {children}
