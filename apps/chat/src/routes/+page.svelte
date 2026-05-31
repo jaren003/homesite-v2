@@ -7,9 +7,13 @@
   let sending = false
   let conversationId = ''
 
+  function newConversationId(): string {
+    return new Date().toISOString().replace(/:/g, '-').replace(/\.\d+Z$/, 'Z')
+  }
+
   onMount(async () => {
     const storage = typeof localStorage !== 'undefined' ? localStorage : null
-    conversationId = storage?.getItem('conversationId') ?? crypto.randomUUID()
+    conversationId = storage?.getItem('conversationId') ?? newConversationId()
     storage?.setItem('conversationId', conversationId)
 
     try {
@@ -84,7 +88,7 @@
   }
 
   async function clearHistory() {
-    conversationId = crypto.randomUUID()
+    conversationId = newConversationId()
     const storage = typeof localStorage !== 'undefined' ? localStorage : null
     storage?.setItem('conversationId', conversationId)
     messages = []
