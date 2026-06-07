@@ -1,10 +1,12 @@
 // Day detail page — lists all events and reminders for a specific date.
 // Route: /day/[date]  where date is YYYY-MM-DD
 import { notFound } from 'next/navigation'
-import Link from 'next/link'
 import { getEvents, getReminders } from '@/lib/eventkit/client'
 import EventCard from '@/components/calendar/EventCard'
+import DayHeader from '@/components/day/DayHeader'
 import DayRemindersClient from '@/components/day/DayRemindersClient'
+import AttendeeCirclesStub from '@/components/event/AttendeeCirclesStub'
+import { shiftDay, eventStartDay } from '@/lib/utils/date'
 import type { Reminder } from '@/lib/eventkit/types'
 
 interface Props {
@@ -12,18 +14,6 @@ interface Props {
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
-
-function prevDay(date: string): string {
-  const d = new Date(date + 'T12:00:00')
-  d.setDate(d.getDate() - 1)
-  return d.toISOString().slice(0, 10)
-}
-
-function nextDay(date: string): string {
-  const d = new Date(date + 'T12:00:00')
-  d.setDate(d.getDate() + 1)
-  return d.toISOString().slice(0, 10)
-}
 
 function filterRemindersForDay(reminders: Reminder[], date: string): Reminder[] {
   return reminders.filter(r => {
@@ -40,61 +30,27 @@ export default async function DayPage({ params }: Props) {
 
   if (!ISO_DATE.test(date)) notFound()
 
+  // Query [date, nextDay) so the bridge returns all events that start on `date`.
+  // Using (date, date) is a zero-duration window that misses timed events.
+  const nextDay = shiftDay(date, 1)
+
   const [eventsResult, remindersResult] = await Promise.allSettled([
-    getEvents(date, date),
+    getEvents(date, nextDay),
     getReminders({ completed: 'false' }),
   ])
 
-  const events     = eventsResult.status === 'fulfilled'    ? eventsResult.value    : []
-  const reminders  = remindersResult.status === 'fulfilled'  ? remindersResult.value : []
+  // Filter to events that actually start on `date` (the wider query may include
+  // events at the midnight boundary of the next day).
+  const allEvents    = eventsResult.status === 'fulfilled'   ? eventsResult.value    : []
+  const events       = allEvents.filter(e => eventStartDay(e.startDate) === date)
+  const reminders    = remindersResult.status === 'fulfilled' ? remindersResult.value : []
   const dayReminders = filterRemindersForDay(reminders, date)
   const bridgeError  = eventsResult.status === 'rejected' || remindersResult.status === 'rejected'
 
-  const displayDate = new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-
-  const today = new Date().toLocaleDateString('en-CA')
-  const isToday = date === today
-
   return (
     <div className="flex flex-col gap-6 max-w-2xl">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/calendar"
-                className="text-sm px-2 py-1 rounded-lg hover:opacity-70 transition-opacity"
-                style={{ color: 'var(--hb-accent)' }}>
-            ← Calendar
-          </Link>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--hb-text)' }}>
-            {displayDate}
-            {isToday && (
-              <span className="ml-2 text-xs font-mono px-2 py-0.5 rounded-full align-middle"
-                    style={{ background: 'var(--hb-accent)', color: '#fff' }}>
-                Today
-              </span>
-            )}
-          </h1>
-        </div>
-
-        {/* Prev / Next day nav */}
-        <div className="flex items-center gap-1">
-          <Link href={`/day/${prevDay(date)}`}
-                className="px-2 py-1 rounded text-sm hover:opacity-70 transition-opacity"
-                style={{ color: 'var(--hb-accent)' }}>
-            ‹
-          </Link>
-          <Link href={`/day/${nextDay(date)}`}
-                className="px-2 py-1 rounded text-sm hover:opacity-70 transition-opacity"
-                style={{ color: 'var(--hb-accent)' }}>
-            ›
-          </Link>
-        </div>
-      </div>
+      {/* Header — centered ← [Date] → navigation */}
+      <DayHeader date={date} />
 
       {bridgeError && (
         <div className="px-4 py-3 rounded-xl text-sm" style={{ background: 'var(--hb-coral)', color: '#fff' }}>
@@ -120,11 +76,16 @@ export default async function DayPage({ params }: Props) {
           : (
             <div className="flex flex-col gap-2">
               {events.map(e => (
-                <EventCard
-                  key={e.id}
-                  event={e}
-                  href={`/event/${encodeURIComponent(e.id)}?date=${date}`}
-                />
+                <div key={e.id} className="flex items-center gap-2">
+                  <div className="flex-1 min-w-0">
+                    <EventCard
+                      event={e}
+                      href={`/event/${encodeURIComponent(e.id)}?date=${date}`}
+                    />
+                  </div>
+                  {/* Attendee stub — TODO: wire to real attendee data */}
+                  <AttendeeCirclesStub />
+                </div>
               ))}
             </div>
           )

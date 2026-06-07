@@ -22,12 +22,12 @@ describe('POST /api/classify', () => {
   }
 
   it('returns tier decision for a valid prompt', async () => {
-    mockClassify.mockResolvedValueOnce({ tier: 'T1', model: 'phi3:mini', reason: 'SIMPLE' })
+    mockClassify.mockResolvedValueOnce({ tier: 'T1', model: 'gemma4:2b', reason: 'SIMPLE' })
     const { POST } = await import('@/app/api/classify/route')
     const res = await POST(makeRequest({ prompt: 'What is 2+2?' }))
     expect(res.status).toBe(200)
     const body = await res.json()
-    expect(body).toEqual({ tier: 'T1', model: 'phi3:mini', reason: 'SIMPLE' })
+    expect(body).toEqual({ tier: 'T1', model: 'gemma4:2b', reason: 'SIMPLE' })
     expect(mockClassify).toHaveBeenCalledWith('What is 2+2?')
   })
 

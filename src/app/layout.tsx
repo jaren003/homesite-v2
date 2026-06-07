@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import NavBar from '@/components/NavBar'
 
 export const metadata: Metadata = {
   title: 'Homesite',
@@ -7,30 +8,13 @@ export const metadata: Metadata = {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const chatUrl = process.env.NEXT_PUBLIC_CHAT_URL ?? 'http://localhost:3001'
+
   return (
     <html lang="en">
       <body className="min-h-screen" style={{ background: 'var(--hb-bg)', color: 'var(--hb-text)' }}>
-        <nav style={{ borderBottom: '1px solid var(--hb-border)', background: 'var(--hb-surface)' }}
-             className="flex items-center gap-6 px-6 py-4">
-          <a href="/" className="text-sm font-semibold" style={{ color: 'var(--hb-text)' }}>
-            Homesite
-          </a>
-          <a href="/calendar" className="text-sm" style={{ color: 'var(--hb-textSub)' }}>
-            Calendar
-          </a>
-          <a href="/reminders" className="text-sm" style={{ color: 'var(--hb-textSub)' }}>
-            Reminders
-          </a>
-          <a href="/guide" className="text-sm" style={{ color: 'var(--hb-textSub)' }}>
-            Guide
-          </a>
-          <a href={process.env.NEXT_PUBLIC_CHAT_URL ?? 'http://localhost:3001'}
-             className="text-sm"
-             style={{ color: 'var(--hb-textSub)' }}>
-            Chat
-          </a>
-        </nav>
-        <main className="max-w-5xl mx-auto px-4 py-6">
+        <NavBar chatUrl={chatUrl} />
+        <main className="max-w-[1600px] mx-auto px-4 md:px-6 py-4">
           {children}
         </main>
       </body>

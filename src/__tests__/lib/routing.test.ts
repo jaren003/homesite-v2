@@ -10,9 +10,10 @@ vi.mock('node:fs', () => ({
 
 vi.mock('/Users/dahub/Projects/Homesite-v2/config/tiers.json', () => ({
   default: {
-    T1: { role: 'Simple Q&A', model: 'phi3:mini' },
-    T2: { role: 'Complex / fallback', model: 'llama3:8b' },
-    T3: { role: 'Deep reasoning / tool use', model: 'claude-sonnet-4-6' },
+    T1: { role: 'Intent classifier / simple Q&A', model: 'gemma4:2b' },
+    T2: { role: 'General assistant', model: 'gemma4:4b' },
+    T3: { role: 'Capable reasoner / long context', model: 'gemma4:26b' },
+    T4: { role: 'API escalation / external tools', model: 'claude-sonnet-4-6' },
   },
 }))
 
@@ -50,9 +51,9 @@ describe('classifyPrompt', () => {
       "what's in today's news?",
     ]
 
-    it.each(toolPrompts)('escalates to T3 for: "%s"', async (prompt) => {
+    it.each(toolPrompts)('escalates to T4 for: "%s"', async (prompt) => {
       const result = await classifyPrompt(prompt)
-      expect(result.tier).toBe('T3')
+      expect(result.tier).toBe('T4')
       expect(result.model).toBe('claude-sonnet-4-6')
       expect(result.reason).toBe('TOOL')
       // Ollama should not be called for keyword-matched tool prompts
@@ -65,19 +66,19 @@ describe('classifyPrompt', () => {
     it('routes SIMPLE → T1', async () => {
       mockFetch.mockReturnValueOnce(ollamaResponse('SIMPLE'))
       const result = await classifyPrompt('What is 2 + 2?')
-      expect(result).toEqual({ tier: 'T1', model: 'phi3:mini', reason: 'SIMPLE' })
+      expect(result).toEqual({ tier: 'T1', model: 'gemma4:2b', reason: 'SIMPLE' })
     })
 
     it('routes COMPLEX → T2', async () => {
       mockFetch.mockReturnValueOnce(ollamaResponse('COMPLEX'))
       const result = await classifyPrompt('Explain the trade-offs between microservices and monoliths')
-      expect(result).toEqual({ tier: 'T2', model: 'llama3:8b', reason: 'COMPLEX' })
+      expect(result).toEqual({ tier: 'T2', model: 'gemma4:4b', reason: 'COMPLEX' })
     })
 
-    it('routes TOOL (from classifier) → T3', async () => {
+    it('routes TOOL (from classifier) → T4', async () => {
       mockFetch.mockReturnValueOnce(ollamaResponse('TOOL'))
       const result = await classifyPrompt('Tell me something interesting')
-      expect(result).toEqual({ tier: 'T3', model: 'claude-sonnet-4-6', reason: 'TOOL' })
+      expect(result).toEqual({ tier: 'T4', model: 'claude-sonnet-4-6', reason: 'TOOL' })
     })
 
     it('falls back to COMPLEX for unknown classifier output', async () => {
@@ -97,7 +98,7 @@ describe('classifyPrompt', () => {
       const result = await classifyPrompt('What is the meaning of life?')
       expect(result).toEqual({
         tier: 'T2',
-        model: 'llama3:8b',
+        model: 'gemma4:4b',
         reason: 'classifier_unavailable',
       })
     })
@@ -107,7 +108,7 @@ describe('classifyPrompt', () => {
       const result = await classifyPrompt('Draft a poem about autumn')
       expect(result).toEqual({
         tier: 'T2',
-        model: 'llama3:8b',
+        model: 'gemma4:4b',
         reason: 'classifier_unavailable',
       })
     })
@@ -124,7 +125,7 @@ describe('classifyPrompt', () => {
       const entry = JSON.parse(String(line))
       expect(entry).toMatchObject({
         tier: 'T1',
-        model: 'phi3:mini',
+        model: 'gemma4:2b',
         reason: 'SIMPLE',
       })
       expect(entry.ts).toBeDefined()
@@ -137,7 +138,7 @@ describe('classifyPrompt', () => {
       expect(appendFileSync).toHaveBeenCalledOnce()
       const [, line] = vi.mocked(appendFileSync).mock.calls[0]
       const entry = JSON.parse(String(line))
-      expect(entry.tier).toBe('T3')
+      expect(entry.tier).toBe('T4')
       expect(entry.reason).toBe('TOOL')
     })
 

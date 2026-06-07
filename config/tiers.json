@@ -1,5 +1,6 @@
 {
-  "T1": { "role": "Simple Q&A", "model": "phi3:mini" },
-  "T2": { "role": "Complex / fallback", "model": "llama3:8b" },
-  "T3": { "role": "Deep reasoning / tool use", "model": "claude-sonnet-4-6" }
+  "T1": { "role": "Intent classifier / simple Q&A", "model": "gemma4:2b" },
+  "T2": { "role": "General assistant", "model": "gemma4:4b" },
+  "T3": { "role": "Capable reasoner / long context", "model": "gemma4:26b" },
+  "T4": { "role": "API escalation / external tools", "model": "claude-sonnet-4-6" }
 }

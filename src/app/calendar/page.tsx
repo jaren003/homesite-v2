@@ -1,19 +1,43 @@
-// Calendar page — server component, fetches this month's events + calendar list
+// Calendar page — server component. Reads ?week=YYYY-MM-DD to support
+// Link-based prev/next navigation that works on iPad Safari.
 import { getEvents, getCalendars } from '@/lib/eventkit/client'
-import CalendarGrid from '@/components/calendar/CalendarGrid'
+import CalendarGridWeek from '@/components/calendar/CalendarGridWeek'
 
-function monthRange(): { start: string; end: string; monthStr: string } {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = d.getMonth()
-  const start = new Date(y, m, 1).toISOString().slice(0, 10)
-  const end   = new Date(y, m + 1, 0).toISOString().slice(0, 10)
-  const monthStr = `${y}-${String(m + 1).padStart(2, '0')}`
-  return { start, end, monthStr }
+interface Props {
+  searchParams: Promise<{ week?: string }>
 }
 
-export default async function CalendarPage() {
-  const { start, end, monthStr } = monthRange()
+function isoDate(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Returns the Sunday of the week for the given ?week param (or today's week). */
+function resolveWeekSunday(week?: string): Date {
+  let base: Date | null = null
+  if (week) {
+    const parsed = new Date(week + 'T12:00:00')
+    if (!isNaN(parsed.getTime())) base = parsed
+  }
+  if (!base) base = new Date()
+  const sun = new Date(base)
+  sun.setDate(base.getDate() - base.getDay())
+  sun.setHours(0, 0, 0, 0)
+  return sun
+}
+
+/** Fetch window: 4 weeks before and 5 weeks after the displayed Sunday. */
+function fetchRange(sunday: Date): { start: string; end: string } {
+  const start = new Date(sunday)
+  start.setDate(sunday.getDate() - 28)
+  const end = new Date(sunday)
+  end.setDate(sunday.getDate() + 35)
+  return { start: isoDate(start), end: isoDate(end) }
+}
+
+export default async function CalendarPage({ searchParams }: Props) {
+  const { week } = await searchParams
+  const sunday = resolveWeekSunday(week)
+  const { start, end } = fetchRange(sunday)
 
   const [eventsResult, calendarsResult] = await Promise.allSettled([
     getEvents(start, end),
@@ -37,7 +61,11 @@ export default async function CalendarPage() {
         </div>
       )}
 
-      <CalendarGrid events={events} calendars={calendars} initialMonth={monthStr} />
+      <CalendarGridWeek
+        events={events}
+        calendars={calendars}
+        weekSunday={isoDate(sunday)}
+      />
     </div>
   )
 }

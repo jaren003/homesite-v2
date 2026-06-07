@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { formatRelativeDate, isOverdue, isDueToday, formatEventTime } from '@/lib/utils/date'
+import { formatRelativeDate, isOverdue, isDueToday, formatEventTime, shiftDay, eventStartDay } from '@/lib/utils/date'
 
 // Pin "today" to a known date for deterministic tests
 const TODAY = new Date('2026-05-25T10:00:00')
@@ -82,5 +82,37 @@ describe('formatEventTime', () => {
       isAllDay: false,
     })
     expect(result).toMatch(/\d{1,2}:\d{2}/)
+  })
+})
+
+describe('shiftDay', () => {
+  it('+1 advances by one day', () => {
+    expect(shiftDay('2026-06-05', 1)).toBe('2026-06-06')
+  })
+
+  it('-1 goes back one day', () => {
+    expect(shiftDay('2026-06-05', -1)).toBe('2026-06-04')
+  })
+
+  it('handles month-end boundary', () => {
+    expect(shiftDay('2026-06-30', 1)).toBe('2026-07-01')
+  })
+
+  it('handles month-start boundary', () => {
+    expect(shiftDay('2026-06-01', -1)).toBe('2026-05-31')
+  })
+
+  it('handles year-end boundary', () => {
+    expect(shiftDay('2026-12-31', 1)).toBe('2027-01-01')
+  })
+})
+
+describe('eventStartDay', () => {
+  it('returns the date prefix from a timed UTC event', () => {
+    expect(eventStartDay('2026-06-05T14:00:00+0000')).toBe('2026-06-05')
+  })
+
+  it('returns the date as-is for all-day events', () => {
+    expect(eventStartDay('2026-06-05')).toBe('2026-06-05')
   })
 })

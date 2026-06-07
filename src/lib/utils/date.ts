@@ -4,6 +4,26 @@
 // making them trivially testable via vi.setSystemTime().
 
 /**
+ * Returns the YYYY-MM-DD string for the day after the given date string.
+ * Uses noon anchor to avoid DST edge cases.
+ */
+export function shiftDay(date: string, delta: number): string {
+  const d = new Date(date + 'T12:00:00')
+  d.setDate(d.getDate() + delta)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Returns the YYYY-MM-DD for the day that an event starts on (local-ish).
+ * Uses the ISO string prefix so all-day and timed events are handled uniformly.
+ * Note: for timed events stored as UTC this matches the UTC date, not local.
+ * That is consistent with how CalendarGridTwoWeek bins events.
+ */
+export function eventStartDay(startDate: string): string {
+  return startDate.slice(0, 10)
+}
+
+/**
  * Returns the local YYYY-MM-DD string for an ISO date/datetime string.
  */
 function toLocalDateStr(iso: string): string {

@@ -76,7 +76,7 @@ export async function classifyPrompt(prompt: string): Promise<RoutingDecision> {
 
   // Keyword-based tool-use escalation — skips Ollama entirely
   if (hasToolUseKeyword(prompt)) {
-    const decision: RoutingDecision = { tier: 'T3', model: tiers.T3.model, reason: 'TOOL' }
+    const decision: RoutingDecision = { tier: 'T4', model: tiers.T4.model, reason: 'TOOL' }
     logDecision(promptHash, decision)
     return decision
   }
@@ -99,7 +99,7 @@ export async function classifyPrompt(prompt: string): Promise<RoutingDecision> {
     classification === 'SIMPLE'
       ? { tier: 'T1', model: tiers.T1.model, reason: 'SIMPLE' }
       : classification === 'TOOL'
-        ? { tier: 'T3', model: tiers.T3.model, reason: 'TOOL' }
+        ? { tier: 'T4', model: tiers.T4.model, reason: 'TOOL' }
         : { tier: 'T2', model: tiers.T2.model, reason: 'COMPLEX' }
 
   logDecision(promptHash, decision)

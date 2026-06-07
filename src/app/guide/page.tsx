@@ -108,13 +108,25 @@ export default function GuidePage() {
           </Section>
 
           <Section title="Calendar">
-            <Card icon="📅" title="Monthly calendar view">
-              Click <strong>Calendar</strong> in the top nav to see a monthly grid. Days with
-              events show a dot indicator. Click any day to jump to the day detail view.
+            <Card icon="📅" title="Week view">
+              Click <strong>Calendar</strong> in the top nav to see the current week —
+              Sunday through Saturday. Each event card leads with the event name so you
+              can scan what&apos;s happening at a glance; the time appears below it in smaller
+              text. All-day events appear at the top of each day column.
+            </Card>
+            <Card icon="◀ ▶" title="Moving between weeks">
+              Use the <strong>‹</strong> and <strong>›</strong> buttons to step backward or
+              forward one week at a time. Hit <strong>Today</strong> to snap back to the
+              current week from anywhere.
+            </Card>
+            <Card icon="🎨" title="Filter by calendar">
+              Use the sidebar on the left to show or hide events from specific calendars.
+              Each calendar is color-coded to match your Mac Calendar app.
             </Card>
             <Card icon="📋" title="Day detail">
-              Clicking a day shows all events for that day with times, locations, and notes.
-              Tap an event title to expand its full notes.
+              Click any day cell to open the full day view — all events with times, locations,
+              and notes. Days with more than 4 events show a &ldquo;+N more&rdquo; link that
+              takes you to the full day detail.
             </Card>
           </Section>
 
@@ -151,15 +163,22 @@ export default function GuidePage() {
               Run this once after cloning, and again whenever you update the bridge source:
               <Code>./scripts/eventkit-bridge/build.sh</Code>
             </Card>
-            <Card icon="▶️" title="Start the bridge">
-              The bridge must be running for calendar and reminder data to load. Start it with:
-              <Code>./scripts/eventkit-bridge/eventkit-bridge</Code>
-              Keep the terminal window open, or set it up as a launchd service so it starts
-              automatically on login.
+            <Card icon="▶️" title="How the bridge runs">
+              You don&apos;t start the bridge manually — the Next.js server spawns it
+              automatically on each request. Just run <code className="font-mono text-xs">npm run dev</code> and
+              the bridge is invoked in the background whenever a page loads.
             </Card>
-            <Card icon="🔁" title="Restart after macOS update">
-              If the bridge stops responding after a macOS update, rebuild it with the build
-              script above — the EventKit API sometimes changes between OS versions.
+            <Card icon="🔑" title="Grant macOS permissions (first time only)">
+              On first use, macOS must grant Calendar &amp; Reminders access. Run this once to
+              trigger the permission prompt:
+              <Code>./scripts/eventkit-bridge/eventkit-bridge calendars</Code>
+              Accept both prompts in System Settings. After that, <code className="font-mono text-xs">npm run dev</code> is
+              all you need.
+            </Card>
+            <Card icon="🔁" title="Rebuild after macOS update">
+              If the bridge errors after a macOS update, rebuild it — the EventKit API
+              sometimes changes between OS versions:
+              <Code>./scripts/eventkit-bridge/build.sh</Code>
             </Card>
           </Section>
 
