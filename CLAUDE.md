@@ -1,5 +1,19 @@
 @AGENTS.md
 
+## Server
+
+The dev server runs via **PM2** and survives terminal closure / reboots automatically.
+
+- **Check status:** `pm2 status`
+- **Restart:** `pm2 restart homesite`
+- **Live logs:** `pm2 logs homesite`
+- **Stop:** `pm2 stop homesite`
+- **Config:** `ecosystem.config.cjs` at repo root (runs `next dev` on port 3000)
+
+Do **not** tell the user to run `npm run dev` — PM2 manages the process. If the site is down, tell the user to run `pm2 restart homesite` or check `pm2 logs homesite` for errors.
+
+---
+
 ## Agent skills
 
 ### Issue tracker
